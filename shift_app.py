@@ -1,8 +1,16 @@
 import streamlit as st
 from datetime import datetime, timedelta
 import pandas as pd
+import calendar
 
-st.set_page_config(page_title="Shift App", layout="centered")
+# =========================
+# Page Config (ONLY ONCE)
+# =========================
+st.set_page_config(
+    page_title="My Shift App",
+    page_icon="🔁",
+    layout="centered"
+)
 
 st.title("🔁 My Shift Schedule")
 
@@ -14,15 +22,12 @@ anchor_cycle_day = 1
 
 today = datetime.today().date()
 
-days_since_anchor = (today - anchor_date).days
-today_cycle_day = (anchor_cycle_day + days_since_anchor) % 8
-
 # =========================
-# Shift Logic
+# Shift Logic (FIXED - STABLE)
 # =========================
 def get_shift_status(target_date):
-    delta_days = (target_date - today).days
-    cycle_day = (today_cycle_day + delta_days) % 8
+    delta_days = (target_date - anchor_date).days
+    cycle_day = (anchor_cycle_day + delta_days) % 8
 
     if cycle_day == 0:
         return "Morning", "Day 1"
@@ -42,7 +47,7 @@ def get_shift_status(target_date):
         return "Off", "Day 2"
 
 # =========================
-# 🎯 TODAY / TOMORROW PANEL
+# 📌 TODAY / TOMORROW PANEL
 # =========================
 st.subheader("📌 Quick View")
 
@@ -85,8 +90,6 @@ st.divider()
 # =========================
 # 📅 MONTHLY CALENDAR
 # =========================
-import calendar
-
 st.subheader("📅 Monthly Calendar View")
 
 year = st.number_input("Year", 2020, 2100, today.year, key="year")
@@ -119,23 +122,41 @@ if st.button("Generate Calendar Grid"):
                 cols[i].write("")
             else:
                 date_obj = datetime(year, month, day_num).date()
+
                 shift, day = get_shift_status(date_obj)
+
                 color = get_color(shift)
+                is_today = (date_obj == today)
+
+                border = "3px solid yellow" if is_today else "none"
 
                 cols[i].markdown(
                     f"""
                     <div style="
                         background-color:{color};
-                        padding:10px;
+                        padding:8px;
                         border-radius:10px;
                         text-align:center;
                         color:white;
-                        font-size:14px;
+                        font-size:13px;
+                        line-height:1.2;
+                        border:{border};
                     ">
                         <b>{day_num}</b><br>
                         {shift}<br>
-                        {day}
+                        <small>{day}</small>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
+
+# =========================
+# 🔔 DAILY REMINDER
+# =========================
+st.divider()
+st.subheader("🔔 Daily Reminder")
+
+if st.button("Show Tomorrow's Shift"):
+    tomorrow = today + timedelta(days=1)
+    shift, day = get_shift_status(tomorrow)
+    st.info(f"Tomorrow: {shift} ({day})")
