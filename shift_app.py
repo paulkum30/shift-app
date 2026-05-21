@@ -103,52 +103,47 @@ def get_color(shift):
     else:
         return "#9E9E9E"  # Gray
 
-if st.button("Generate Calendar Grid"):
-    cal = calendar.monthcalendar(year, month)
 
-    st.markdown("### 🗓️ Calendar")
+cal = calendar.monthcalendar(year, month)
 
-    # Weekday headers
+st.markdown("### 🗓️ Calendar")
+
+# Weekday headers
+cols = st.columns(7)
+for i, day_name in enumerate(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]):
+    cols[i].markdown(f"**{day_name}**")
+    
+# Calendar rows
+for week in cal:
     cols = st.columns(7)
-    for i, day_name in enumerate(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]):
-        cols[i].markdown(f"**{day_name}**")
-
-    # Calendar rows
-    for week in cal:
-        cols = st.columns(7)
-
-        for i, day_num in enumerate(week):
-            if day_num == 0:
-                cols[i].write("")
-            else:
-                date_obj = datetime(year, month, day_num).date()
-
-                shift, day = get_shift_status(date_obj)
-
-                color = get_color(shift)
-                is_today = (date_obj == today)
-
-                border = "3px solid yellow" if is_today else "none"
-
-                cols[i].markdown(
-                    f"""
-                    <div style="
-                        background-color:{color};
-                        padding:8px;
-                        border-radius:10px;
-                        text-align:center;
-                        color:white;
-                        font-size:13px;
-                        line-height:1.2;
-                        border:{border};
-                    ">
-                        <b>{day_num}</b><br>
-                        {shift}<br>
-                        <small>{day}</small>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+    for i, day_num in enumerate(week):
+        if day_num == 0:
+            cols[i].write("")
+        else:
+            date_obj = datetime(year, month, day_num).date()
+            shift, day = get_shift_status(date_obj)
+            color = get_color(shift)
+            is_today = (date_obj == today)
+            border = "3px solid yellow" if is_today else "none"
+            cols[i].markdown(
+                f"""
+                <div style="
+                    background-color:{color};
+                    padding:8px;
+                    border-radius:10px;
+                    text-align:center;
+                    color:white;
+                    font-size:13px;
+                    line-height:1.2;
+                    border:{border};
+                ">
+                    <b>{day_num}</b><br>
+                    {shift}<br>
+                    <small>{day}</small>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
 # =========================
 # 🔔 DAILY REMINDER
