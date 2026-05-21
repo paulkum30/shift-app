@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 import pandas as pd
 import calendar
 
+
 # =========================
-# Page Config (ONLY ONCE)
+# Page Config
 # =========================
 st.set_page_config(
     page_title="My Shift App",
@@ -14,45 +15,55 @@ st.set_page_config(
 
 st.title("🔁 My Shift Schedule")
 
+
 # =========================
-# Hidden Anchor (DO NOT TOUCH)
+# Shift Settings
 # =========================
 anchor_date = datetime(2026, 4, 17).date()  # Day 2 Morning
 anchor_cycle_day = 1
 
 today = datetime.today().date()
 
+
 # =========================
-# Shift Logic (FIXED - STABLE)
+# Shift Logic
 # =========================
 def get_shift_status(target_date):
     delta_days = (target_date - anchor_date).days
     cycle_day = (anchor_cycle_day + delta_days) % 8
 
-    if cycle_day == 0:
-        return "Morning", "Day 1"
-    elif cycle_day == 1:
-        return "Morning", "Day 2"
-    elif cycle_day == 2:
-        return "Off", "Day 1"
-    elif cycle_day == 3:
-        return "Off", "Day 2"
-    elif cycle_day == 4:
-        return "Night", "Day 1"
-    elif cycle_day == 5:
-        return "Night", "Day 2"
-    elif cycle_day == 6:
-        return "Off", "Day 1"
-    elif cycle_day == 7:
-        return "Off", "Day 2"
+    shift_pattern = {
+        0: ("Morning", "Day 1"),
+        1: ("Morning", "Day 2"),
+        2: ("Off", "Day 1"),
+        3: ("Off", "Day 2"),
+        4: ("Night", "Day 1"),
+        5: ("Night", "Day 2"),
+        6: ("Off", "Day 1"),
+        7: ("Off", "Day 2"),
+    }
+
+    return shift_pattern[cycle_day]
+
+
+def get_color(shift):
+    colors = {
+        "Morning": "#4CAF50",
+        "Night": "#2196F3",
+        "Off": "#9E9E9E",
+    }
+
+    return colors.get(shift, "#9E9E9E")
+
 
 # =========================
-# 📌 TODAY / TOMORROW PANEL
+# Quick View
 # =========================
 st.subheader("📌 Quick View")
 
 today_shift, today_day = get_shift_status(today)
-tomorrow_shift, tomorrow_day = get_shift_status(today + timedelta(days=1))
+tomorrow = today + timedelta(days=1)
+tomorrow_shift, tomorrow_day = get_shift_status(tomorrow)
 
 col1, col2 = st.columns(2)
 
@@ -67,11 +78,15 @@ with col1:
 with col2:
     st.markdown(f"""
     ### Tomorrow
-    **{today + timedelta(days=1)}**  
+    **{tomorrow}**  
     🔵 **{tomorrow_shift}**  
     ({tomorrow_day})
     """)
 
+
+# =========================
+# Next 7 Days
+# =========================
 st.subheader("📆 Next 7 Days")
 
 next_days = []
@@ -91,8 +106,9 @@ st.dataframe(pd.DataFrame(next_days), use_container_width=True)
 
 st.divider()
 
+
 # =========================
-# 🔍 DATE CHECKER
+# Date Checker
 # =========================
 st.subheader("🔍 Check Any Date")
 
@@ -104,21 +120,14 @@ if st.button("Check"):
 
 st.divider()
 
+
 # =========================
-# 📅 MONTHLY CALENDAR
+# Monthly Calendar
 # =========================
 st.subheader("📅 Monthly Calendar View")
 
 year = st.number_input("Year", 2020, 2100, today.year, key="year")
 month = st.number_input("Month", 1, 12, today.month, key="month")
-
-def get_color(shift):
-    if shift == "Morning":
-        return "#4CAF50"
-    elif shift == "Night":
-        return "#2196F3"
-    else:
-        return "#9E9E9E"
 
 cal = calendar.monthcalendar(year, month)
 
@@ -228,18 +237,10 @@ calendar_html += "</div>"
 
 st.markdown(calendar_html, unsafe_allow_html=True)
 
+
 # =========================
-# 🔔 DAILY REMINDER
+# Monthly Shift Summary
 # =========================
-st.divider()
-st.subheader("🔔 Daily Reminder")
-
-if st.button("Show Tomorrow's Shift"):
-    tomorrow = today + timedelta(days=1)
-    shift, day = get_shift_status(tomorrow)
-    st.info(f"Tomorrow: {shift} ({day})")
-
-
 st.subheader("📊 Monthly Shift Summary")
 
 summary = {
@@ -255,4 +256,21 @@ for day_num in range(1, total_days + 1):
     shift, _ = get_shift_status(date_obj)
     summary[shift] += 1
 
-st.write(summary)
+summary_df = pd.DataFrame({
+    "Shift": list(summary.keys()),
+    "Days": list(summary.values())
+})
+
+st.dataframe(summary_df, use_container_width=True)
+
+st.divider()
+
+
+# =========================
+# Daily Reminder
+# =========================
+st.subheader("🔔 Daily Reminder")
+
+if st.button("Show Tomorrow's Shift"):
+    shift, day = get_shift_status(tomorrow)
+    st.info(f"Tomorrow: {shift} ({day})")
