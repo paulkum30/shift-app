@@ -72,6 +72,23 @@ with col2:
     ({tomorrow_day})
     """)
 
+st.subheader("📆 Next 7 Days")
+
+next_days = []
+
+for i in range(7):
+    date_obj = today + timedelta(days=i)
+    shift, day = get_shift_status(date_obj)
+
+    next_days.append({
+        "Date": date_obj,
+        "Day": date_obj.strftime("%A"),
+        "Shift": shift,
+        "Cycle Day": day
+    })
+
+st.dataframe(pd.DataFrame(next_days), use_container_width=True)
+
 st.divider()
 
 # =========================
@@ -155,3 +172,21 @@ if st.button("Show Tomorrow's Shift"):
     tomorrow = today + timedelta(days=1)
     shift, day = get_shift_status(tomorrow)
     st.info(f"Tomorrow: {shift} ({day})")
+
+
+st.subheader("📊 Monthly Shift Summary")
+
+summary = {
+    "Morning": 0,
+    "Night": 0,
+    "Off": 0
+}
+
+_, total_days = calendar.monthrange(year, month)
+
+for day_num in range(1, total_days + 1):
+    date_obj = datetime(year, month, day_num).date()
+    shift, _ = get_shift_status(date_obj)
+    summary[shift] += 1
+
+st.write(summary)
