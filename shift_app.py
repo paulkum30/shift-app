@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 import pandas as pd
 import calendar
-
+import streamlit.components.v1 as components
 
 # =========================
 # Page Config
@@ -235,7 +235,7 @@ for week in cal:
 
 calendar_html += "</div>"
 
-st.markdown(calendar_html, unsafe_allow_html=True)
+components.html(calendar_html, height=430, scrolling=False)
 
 
 # =========================
